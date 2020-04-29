@@ -1,5 +1,6 @@
 package com.example.stepcountergame;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
@@ -7,6 +8,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -19,10 +21,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private TextView steps;
     private Button upgrade;
-    private SensorManager sensor;
 
     public int score = 0;
-    
+
+    private SensorManager sensorManager;
+    private Sensor sensor;
+
+
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -32,11 +39,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         steps = (TextView) findViewById(R.id.Steps);
         upgrade = (Button) findViewById(R.id.Upgrade);
-        sensor = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 
         steps.setText(String.valueOf(score));
+
+        score = sensor.getFifoReservedEventCount();
 
         upgrade.setOnClickListener(new View.OnClickListener()
         {
@@ -56,12 +65,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-
+        updateScore();
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
+        updateScore();
     }
 }
 
