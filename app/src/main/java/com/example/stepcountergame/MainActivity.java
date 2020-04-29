@@ -22,9 +22,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager sensor;
 
     public int score = 0;
-
-    private float test = 22;
-
+    
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
