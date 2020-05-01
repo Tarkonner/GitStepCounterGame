@@ -3,6 +3,7 @@ package com.example.stepcountergame;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -16,16 +17,23 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
+    //Things in scene
     private TextView steps;
     private Button upgrade;
     private TextView multiText;
     private TextView upgradeText;
 
-
-
+    //Sensor
     private SensorManager sensorManager;
     private Sensor sensor;
+
+    //Variabel
     private boolean runnig = false;
+    private String mul = "Multiply: ";
+
+    //Save data
+    private static String SHARD_PREFS = "shardPrefs";
+
 
     //Variabler to change
     public int score = 0;
@@ -33,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int costPerMultiply = 30;
 
 
+    private Button saveButten;
 
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -42,12 +51,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        saveButten = (Button) findViewById(R.id.SaveButten);
+
         //Setup
         steps = (TextView) findViewById(R.id.Steps);
         multiText = (TextView) findViewById(R.id.Multi);
         upgradeText = (TextView) findViewById(R.id.UpgradeText);
         upgrade = (Button) findViewById(R.id.Upgrade);
 
+        loadData();
 
         //Sensor
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -56,12 +68,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //Show start stats
         upgradeText.setText(String.valueOf(pointsToGive * costPerMultiply));
-        multiText.setText("Multiply: " + pointsToGive);
+        multiText.setText(mul + pointsToGive);
         steps.setText(String.valueOf(score));
+
+
 
         //Start the Step Counter
         onResume();
 
+        saveButten.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveData();
+            }
+        });
 
         upgrade.setOnClickListener(new View.OnClickListener()
         {
@@ -82,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             score -= cost;
             pointsToGive++;
             steps.setText(String.valueOf(score));
-            multiText.setText("Multiply: " + pointsToGive);
+            multiText.setText(mul + pointsToGive);
 
             int newCost = pointsToGive * costPerMultiply;
             upgradeText.setText(String.valueOf(newCost));
@@ -109,6 +129,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onPause();
         runnig = false;
         sensorManager.unregisterListener(this);
+    }
+
+
+    //https://www.youtube.com/watch?v=fJEFZ6EOM9o
+    void saveData()
+    {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARD_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("Score", score);
+        editor.putInt("PointsToGive", pointsToGive);
+
+        editor.apply();
+    }
+
+    void loadData()
+    {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARD_PREFS, MODE_PRIVATE);
+
+        score = sharedPreferences.getInt("Score", 0);
+        pointsToGive = sharedPreferences.getInt("PointsToGive", 1);
+    }
+
+    //On destory: https://stackoverflow.com/questions/49461690/android-when-app-close-do-something
+    @Override
+    public void onBackPressed() {
+        saveData();
     }
 
     @Override
