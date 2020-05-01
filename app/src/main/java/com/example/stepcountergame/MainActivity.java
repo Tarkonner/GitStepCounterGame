@@ -10,6 +10,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -33,7 +34,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     //Save data
     private static String SHARD_PREFS = "shardPrefs";
-
+    private Handler timerHandler; //Timer for save game
+    private int howOftenToSave = 1000;
 
     //Variabler to change
     public int score = 0;
@@ -41,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int costPerMultiply = 30;
 
 
-    private Button saveButten;
 
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -51,15 +52,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        saveButten = (Button) findViewById(R.id.SaveButten);
-
         //Setup
         steps = (TextView) findViewById(R.id.Steps);
         multiText = (TextView) findViewById(R.id.Multi);
         upgradeText = (TextView) findViewById(R.id.UpgradeText);
         upgrade = (Button) findViewById(R.id.Upgrade);
 
+        timerHandler = new Handler();
+        timerHandler.postDelayed(updateTimerThread, 0);
+
+        //Load game
         loadData();
+
+
 
         //Sensor
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -75,13 +80,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //Start the Step Counter
         onResume();
-
-        saveButten.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveData();
-            }
-        });
 
         upgrade.setOnClickListener(new View.OnClickListener()
         {
@@ -151,11 +149,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         pointsToGive = sharedPreferences.getInt("PointsToGive", 1);
     }
 
-    //On destory: https://stackoverflow.com/questions/49461690/android-when-app-close-do-something
-    @Override
-    public void onBackPressed() {
-        saveData();
-    }
+    private Runnable updateTimerThread = new Runnable() {
+        @Override
+        public void run() {
+            saveData();
+            timerHandler.postDelayed(this, howOftenToSave);
+        }
+    };
 
     @Override
     public void onSensorChanged(SensorEvent event) {
